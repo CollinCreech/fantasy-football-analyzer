@@ -1,20 +1,18 @@
 import "./App.css";
 import PlayerCard from "./components/PlayerCard/PlayerCard";
+import { players } from "./data/players";
 
 function App() {
-  const player = {
-    name: "Ja'Marr Chase",
-    position: "WR",
-    team: "CIN",
-    points: 24.7,
-    image: "https://a.espncdn.com/i/headshots/nfl/players/full/4362628.png",
-  };
-
   return (
     <div className="App">
-      <h1>My Fantasy Team</h1>
+      <h1>Fantasy Football Analyzer</h1>
+      <p>Sample data for demonstration. Not current player statistics.</p>
 
-      <PlayerCard player={player} />
+      <div className="player-list">
+        {players.map((player) => (
+          <PlayerCard key={player.id} player={player} />
+        ))}
+      </div>
     </div>
   );
 }

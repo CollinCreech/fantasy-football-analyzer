@@ -1,0 +1,73 @@
+// demo data
+export const players = [
+  {
+    id: "jamarr-chase",
+    name: "Ja'Marr Chase",
+    position: "WR",
+    team: "CIN",
+    points: 24.7,
+  },
+  {
+    id: "josh-allen",
+    name: "Josh Allen",
+    position: "QB",
+    team: "BUF",
+    points: 28.3,
+  },
+  {
+    id: "christian-mccaffrey",
+    name: "Christian McCaffrey",
+    position: "RB",
+    team: "SF",
+    points: 22.5,
+  },
+  {
+    id: "justin-jefferson",
+    name: "Justin Jefferson",
+    position: "WR",
+    team: "MIN",
+    points: 21.4,
+  },
+  {
+    id: "patrick-mahomes",
+    name: "Patrick Mahomes",
+    position: "QB",
+    team: "KC",
+    points: 25.1,
+  },
+  {
+    id: "ceedee-lamb",
+    name: "CeeDee Lamb",
+    position: "WR",
+    team: "DAL",
+    points: 20.8,
+  },
+  {
+    id: "bijan-robinson",
+    name: "Bijan Robinson",
+    position: "RB",
+    team: "ATL",
+    points: 18.9,
+  },
+  {
+    id: "travis-kelce",
+    name: "Travis Kelce",
+    position: "TE",
+    team: "KC",
+    points: 15.6,
+  },
+  {
+    id: "breece-hall",
+    name: "Breece Hall",
+    position: "RB",
+    team: "NYJ",
+    points: 19.2,
+  },
+  {
+    id: "amon-ra-st-brown",
+    name: "Amon-Ra St. Brown",
+    position: "WR",
+    team: "DET",
+    points: 19.8,
+  },
+];
