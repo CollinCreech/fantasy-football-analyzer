@@ -8,3 +8,48 @@
 
   background-color: #f4f4f4;
 }
+
+.App h1,
+.App > p {
+  text-align: center;
+}
+
+.player-search {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 480px;
+  margin: 16px 0 24px;
+}
+
+.player-search label {
+  font-weight: 600;
+}
+
+.player-search input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #767676;
+  border-radius: 6px;
+  font: inherit;
+}
+
+.player-search input:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.player-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 16px;
+  width: 100%;
+  max-width: 1100px;
+}
+
+@media (max-width: 480px) {
+  .App {
+    padding: 16px;
+  }
+}

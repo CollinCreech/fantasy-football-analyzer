@@ -1,5 +1,7 @@
 .player-card {
-  width: 300px;
+  width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
   display: flex;
   align-items: center;
   gap: 15px;
