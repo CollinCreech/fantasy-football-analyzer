@@ -1,8 +1,45 @@
-import { render, screen } from '@testing-library/react';
-import App from './App';
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import App from "./App";
 
-test('renders learn react link', () => {
+test("displays all sample players initially", () => {
   render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+
+  expect(screen.getAllByRole("heading", { level: 2 })).toHaveLength(10);
+  expect(
+    screen.getByRole("heading", { name: "Ja'Marr Chase" }),
+  ).toBeInTheDocument();
+});
+
+test("search ignores capitalization and surrounding spaces", async () => {
+  render(<App />);
+
+  const search = screen.getByRole("searchbox", {
+    name: /search players/i,
+  });
+
+  await userEvent.type(search, " JOSH ");
+
+  expect(
+    screen.getByRole("heading", { name: "Josh Allen" }),
+  ).toBeInTheDocument();
+  expect(screen.getAllByRole("heading", { level: 2 })).toHaveLength(1);
+});
+
+test("shows no results and restores players when search is cleared", async () => {
+  render(<App />);
+
+  const search = screen.getByRole("searchbox", {
+    name: /search players/i,
+  });
+
+  await userEvent.type(search, "zzzz");
+
+  expect(screen.getByRole("status")).toHaveTextContent("No players found.");
+  expect(screen.queryAllByRole("heading", { level: 2 })).toHaveLength(0);
+
+  await userEvent.clear(search);
+
+  expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  expect(screen.getAllByRole("heading", { level: 2 })).toHaveLength(10);
 });
