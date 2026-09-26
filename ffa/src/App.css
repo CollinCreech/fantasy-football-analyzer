@@ -27,7 +27,8 @@
   font-weight: 600;
 }
 
-.player-search input {
+.player-search input,
+.player-search select {
   width: 100%;
   padding: 12px;
   border: 1px solid #767676;
@@ -35,7 +36,8 @@
   font: inherit;
 }
 
-.player-search input:focus-visible {
+.player-search input:focus-visible,
+.player-search select:focus-visible {
   outline: 3px solid #2563eb;
   outline-offset: 2px;
 }

@@ -5,10 +5,18 @@ import { useState } from "react";
 
 function App() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedPosition, setSelectedPosition] = useState("ALL");
 
-  const filteredPlayers = players.filter((player) =>
-    player.name.toLowerCase().includes(searchTerm.trim().toLowerCase()),
-  );
+  const filteredPlayers = players.filter((player) => {
+    const matchesSearch = player.name
+      .toLowerCase()
+      .includes(searchTerm.trim().toLowerCase());
+
+    const matchesPosition =
+      selectedPosition === "ALL" || player.position === selectedPosition;
+
+    return matchesSearch && matchesPosition;
+  });
 
   return (
     <div className="App">
@@ -24,6 +32,18 @@ function App() {
           value={searchTerm}
           onChange={(event) => setSearchTerm(event.target.value)}
         />
+        <label htmlFor="position-filter">Position</label>
+        <select
+          id="position-filter"
+          value={selectedPosition}
+          onChange={(event) => setSelectedPosition(event.target.value)}
+        >
+          <option value="ALL">All positions</option>
+          <option value="QB">Quarterback</option>
+          <option value="RB">Running back</option>
+          <option value="WR">Wide receiver</option>
+          <option value="TE">Tight end</option>
+        </select>
       </div>
 
       {filteredPlayers.length === 0 && <p role="status">No players found.</p>}
