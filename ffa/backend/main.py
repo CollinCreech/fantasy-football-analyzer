@@ -1,17 +1,64 @@
-from fastapi import FastAPI
+import os
+from pathlib import Path
+
+from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException
 import requests
+
+
+load_dotenv(Path(__file__).with_name(".env"), override=True)
 
 app = FastAPI()
 
-@app.get("/api/team")
-def get_team():
-    league_id = "673677643"
+def fetch_league(view):
+    cookies = {
+        "SWID": os.environ.get("ESPN_SWID", "").strip(),
+        "espn_s2": os.environ.get("ESPN_S2", "").strip(),
+    }
+    if not all(cookies.values()):
+        raise HTTPException(
+            status_code=503,
+            detail="Set ESPN_SWID and ESPN_S2 on the backend to access your private league.",
+        )
 
+    league_id = "673677643"
     url = (
         "https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/"
-        f"seasons/2026/segments/0/leagues/{league_id}?view=mRoster"
+        f"seasons/2026/segments/0/leagues/{league_id}?view={view}"
     )
 
-    response = requests.get(url)
+    try:
+        response = requests.get(url, cookies=cookies, timeout=10)
+        if response.status_code in (401, 403):
+            raise HTTPException(
+                status_code=502,
+                detail="ESPN denied league access. Check your backend cookies and account's league access.",
+            )
+        response.raise_for_status()
+        return response.json()
+    except (requests.RequestException, ValueError) as exc:
+        raise HTTPException(
+            status_code=502,
+            detail="Unable to load league data from ESPN.",
+        ) from exc
 
-    return response.json()
+
+@app.get("/api/team")
+def get_team():
+    return fetch_league("mRoster")
+
+
+@app.get("/api/teams")
+def get_teams():
+    data = fetch_league("mTeam")
+    return [
+        {
+            "id": team["id"],
+            "name": team.get("name")
+            or " ".join(
+                filter(None, [team.get("location"), team.get("nickname")])
+            )
+            or f"Team {team['id']}",
+        }
+        for team in data.get("teams", [])
+    ]
