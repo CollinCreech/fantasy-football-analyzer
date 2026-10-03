@@ -2,8 +2,22 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App";
 
-test("displays all sample players initially", () => {
+const originalFetch = global.fetch;
+
+beforeEach(() => {
+  global.fetch = jest.fn().mockResolvedValue({
+    ok: true,
+    json: async () => [{ id: 1, name: "Test Team" }],
+  });
+});
+
+afterAll(() => {
+  global.fetch = originalFetch;
+});
+
+test("displays all sample players initially", async () => {
   render(<App />);
+  await screen.findByRole("combobox", { name: /my team/i });
 
   expect(screen.getAllByRole("heading", { level: 2 })).toHaveLength(10);
   expect(
@@ -13,6 +27,7 @@ test("displays all sample players initially", () => {
 
 test("search ignores capitalization and surrounding spaces", async () => {
   render(<App />);
+  await screen.findByRole("combobox", { name: /my team/i });
 
   const search = screen.getByRole("searchbox", {
     name: /search players/i,
@@ -28,6 +43,7 @@ test("search ignores capitalization and surrounding spaces", async () => {
 
 test("shows no results and restores players when search is cleared", async () => {
   render(<App />);
+  await screen.findByRole("combobox", { name: /my team/i });
 
   const search = screen.getByRole("searchbox", {
     name: /search players/i,
@@ -46,6 +62,7 @@ test("shows no results and restores players when search is cleared", async () =>
 
 test("combines position filtering with search and supports all positions", async () => {
   render(<App />);
+  await screen.findByRole("combobox", { name: /my team/i });
 
   const position = screen.getByRole("combobox", { name: /position/i });
   const search = screen.getByRole("searchbox", { name: /search players/i });
