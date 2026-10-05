@@ -42,6 +42,14 @@ def fetch_league(view):
             detail="Unable to load league data from ESPN.",
         ) from exc
 
+POSITION_LABELS = {
+      1: "QB",
+      2: "RB",
+      3: "WR",
+      4: "TE",
+      5: "K",
+      16: "D/ST",
+  }
 
 @app.get("/api/team")
 def get_team():
@@ -84,7 +92,8 @@ def get_roster(team_id: int):
         roster.append({
             "id": player["id"],
             "name": player["fullName"],
-            "positionId": player.get("defaultPositionId"),
+            "position": POSITION_LABELS.get(
+                player.get("defaultPositionId"), "UNKNOWN"),
             "proTeamId": player.get("proTeamId"),
         })
 

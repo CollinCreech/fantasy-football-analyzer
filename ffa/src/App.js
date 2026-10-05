@@ -1,6 +1,5 @@
 import "./App.css";
 import PlayerCard from "./components/PlayerCard/PlayerCard";
-import { players } from "./data/players";
 import { useEffect, useState } from "react";
 
 function App() {
@@ -92,14 +91,21 @@ function App() {
     return () => controller.abort();
   }, [selectedTeamId]);
 
-  const filteredPlayers = rosterPlayers.filter((player) =>
-    player.name.toLowerCase().includes(searchTerm.trim().toLowerCase()),
-  );
+  const filteredPlayers = rosterPlayers.filter((player) => {
+    const matchesSearch = player.name
+      .toLowerCase()
+      .includes(searchTerm.trim().toLowerCase());
+
+    const matchesPosition =
+      selectedPosition === "ALL" || player.position === selectedPosition;
+
+    return matchesSearch && matchesPosition;
+  });
 
   return (
     <div className="App">
       <h1>Fantasy Football Analyzer</h1>
-      <p>Sample data for demonstration. Not current player statistics.</p>
+      <p>View your ESPN fantasy team's roster.</p>
       <div className="player-search">
         {teamsLoading && <p role="status">Loading league teams…</p>}
         {teamsError && <p role="alert">{teamsError}</p>}
@@ -110,7 +116,11 @@ function App() {
             <select
               id="team-selector"
               value={selectedTeamId}
-              onChange={(event) => setSelectedTeamId(event.target.value)}
+              onChange={(event) => {
+                setSelectedTeamId(event.target.value);
+                setSearchTerm("");
+                setSelectedPosition("ALL");
+              }}
             >
               <option value="">Select your team</option>
               {teams.map((team) => (
@@ -136,7 +146,6 @@ function App() {
         />
         <label htmlFor="position-filter">Position</label>
         <select
-          disabled
           id="position-filter"
           value={selectedPosition}
           onChange={(event) => setSelectedPosition(event.target.value)}
@@ -146,6 +155,8 @@ function App() {
           <option value="RB">Running back</option>
           <option value="WR">Wide receiver</option>
           <option value="TE">Tight end</option>
+          <option value="K">Kicker</option>
+          <option value="D/ST">Defense / Special teams</option>
         </select>
       </div>
 
