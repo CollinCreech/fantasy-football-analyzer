@@ -1,6 +1,5 @@
 import "./App.css";
 import PlayerCard from "./components/PlayerCard/PlayerCard";
-import { players } from "./data/players";
 import { useEffect, useState } from "react";
 
 function App() {
@@ -10,6 +9,9 @@ function App() {
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [teamsLoading, setTeamsLoading] = useState(true);
   const [teamsError, setTeamsError] = useState("");
+  const [rosterPlayers, setRosterPlayers] = useState([]);
+  const [rosterLoading, setRosterLoading] = useState(false);
+  const [rosterError, setRosterError] = useState("");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -28,7 +30,9 @@ function App() {
         setTeams(data);
       } catch (error) {
         if (error.name !== "AbortError") {
-          setTeamsError("Unable to load league teams. Try refreshing the page.");
+          setTeamsError(
+            "Unable to load league teams. Try refreshing the page.",
+          );
         }
       } finally {
         if (!controller.signal.aborted) {
@@ -41,7 +45,53 @@ function App() {
     return () => controller.abort();
   }, []);
 
-  const filteredPlayers = players.filter((player) => {
+  useEffect(() => {
+    if (!selectedTeamId) {
+      setRosterPlayers([]);
+      setRosterLoading(false);
+      setRosterError("");
+      return;
+    }
+
+    const controller = new AbortController();
+
+    async function loadRoster() {
+      setRosterLoading(true);
+      setRosterError("");
+      setRosterPlayers([]);
+
+      try {
+        const response = await fetch(`/api/teams/${selectedTeamId}/roster`, {
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error("Unable to load roster.");
+        }
+
+        const data = await response.json();
+
+        if (!controller.signal.aborted) {
+          setRosterPlayers(data.players);
+        }
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          setRosterError(
+            "Unable to load roster. Please select your team again.",
+          );
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setRosterLoading(false);
+        }
+      }
+    }
+
+    loadRoster();
+    return () => controller.abort();
+  }, [selectedTeamId]);
+
+  const filteredPlayers = rosterPlayers.filter((player) => {
     const matchesSearch = player.name
       .toLowerCase()
       .includes(searchTerm.trim().toLowerCase());
@@ -55,7 +105,7 @@ function App() {
   return (
     <div className="App">
       <h1>Fantasy Football Analyzer</h1>
-      <p>Sample data for demonstration. Not current player statistics.</p>
+      <p>View your ESPN fantasy team's roster.</p>
       <div className="player-search">
         {teamsLoading && <p role="status">Loading league teams…</p>}
         {teamsError && <p role="alert">{teamsError}</p>}
@@ -66,7 +116,11 @@ function App() {
             <select
               id="team-selector"
               value={selectedTeamId}
-              onChange={(event) => setSelectedTeamId(event.target.value)}
+              onChange={(event) => {
+                setSelectedTeamId(event.target.value);
+                setSearchTerm("");
+                setSelectedPosition("ALL");
+              }}
             >
               <option value="">Select your team</option>
               {teams.map((team) => (
@@ -101,10 +155,23 @@ function App() {
           <option value="RB">Running back</option>
           <option value="WR">Wide receiver</option>
           <option value="TE">Tight end</option>
+          <option value="K">Kicker</option>
+          <option value="D/ST">Defense / Special teams</option>
         </select>
       </div>
 
-      {filteredPlayers.length === 0 && <p role="status">No players found.</p>}
+      {!selectedTeamId && (
+        <p role="status">Select a team to view its roster.</p>
+      )}
+
+      {rosterLoading && <p role="status">Loading roster…</p>}
+
+      {rosterError && <p role="alert">{rosterError}</p>}
+
+      {selectedTeamId &&
+        !rosterLoading &&
+        !rosterError &&
+        filteredPlayers.length === 0 && <p role="status">No players found.</p>}
 
       <div className="player-list">
         {filteredPlayers.map((player) => (

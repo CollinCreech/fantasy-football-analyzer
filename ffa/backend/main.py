@@ -42,6 +42,14 @@ def fetch_league(view):
             detail="Unable to load league data from ESPN.",
         ) from exc
 
+POSITION_LABELS = {
+      1: "QB",
+      2: "RB",
+      3: "WR",
+      4: "TE",
+      5: "K",
+      16: "D/ST",
+  }
 
 @app.get("/api/team")
 def get_team():
@@ -62,3 +70,36 @@ def get_teams():
         }
         for team in data.get("teams", [])
     ]
+
+
+@app.get("/api/teams/{team_id}/roster")
+def get_roster(team_id: int):
+    data = fetch_league("mRoster")
+
+    selected_team = next(
+        (team for team in data.get("teams", []) if team["id"] == team_id),
+        None,
+    )
+
+    if selected_team is None:
+        raise HTTPException(status_code=404, detail="Team not found.")
+
+    roster = []
+
+    for entry in selected_team.get("roster", {}).get("entries", []):
+        player = entry["playerPoolEntry"]["player"]
+
+        roster.append({
+            "id": player["id"],
+            "name": player["fullName"],
+            "position": POSITION_LABELS.get(
+                player.get("defaultPositionId"), "UNKNOWN"),
+            "proTeamId": player.get("proTeamId"),
+        })
+
+    return {
+        "teamId": team_id,
+        "seasonId": data.get("seasonId"),
+        "scoringPeriodId": data.get("scoringPeriodId"),
+        "players": roster,
+    }
