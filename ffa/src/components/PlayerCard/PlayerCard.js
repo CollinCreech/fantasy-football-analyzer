@@ -11,7 +11,10 @@ function PlayerCard({ player }) {
             {player.team ? ` - ${player.team}` : ""}
           </p>
         )}
-        {player.points != null && <p>Fantasy Points: {player.points}</p>}{" "}
+        <p>
+          Week {player.scoringPeriodId} points:{" "}
+          {player.points == null ? "Unavailable" : player.points.toFixed(2)}
+        </p>{" "}
       </div>
     </div>
   );

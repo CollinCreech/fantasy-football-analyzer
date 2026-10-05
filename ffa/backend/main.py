@@ -84,10 +84,30 @@ def get_roster(team_id: int):
     if selected_team is None:
         raise HTTPException(status_code=404, detail="Team not found.")
 
+    season_id = data["seasonId"]
+    scoring_period_id = data["scoringPeriodId"]
+
     roster = []
 
     for entry in selected_team.get("roster", {}).get("entries", []):
         player = entry["playerPoolEntry"]["player"]
+        actual_stats = next(
+        (
+            stat
+            for stat in player.get("stats", [])
+            if stat.get("seasonId") == season_id
+            and stat.get("scoringPeriodId") == scoring_period_id
+            and stat.get("statSourceId") == 0
+            and stat.get("statSplitTypeId") == 1
+        ),
+        None,
+        )
+
+        points = (
+            actual_stats.get("appliedTotal")
+            if actual_stats is not None
+            else None
+        )
 
         roster.append({
             "id": player["id"],
@@ -95,6 +115,8 @@ def get_roster(team_id: int):
             "position": POSITION_LABELS.get(
                 player.get("defaultPositionId"), "UNKNOWN"),
             "proTeamId": player.get("proTeamId"),
+            "points": points,
+            "scoringPeriodId": scoring_period_id,
         })
 
     return {
