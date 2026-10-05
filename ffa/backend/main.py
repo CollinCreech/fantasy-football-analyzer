@@ -1,14 +1,59 @@
 import os
 from pathlib import Path
 
+import secrets
+
 from dotenv import load_dotenv
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from fastapi.security import HTTPBasic
 from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
 import requests
 
 
 load_dotenv(Path(__file__).with_name(".env"), override=True)
 
 app = FastAPI()
+
+security = HTTPBasic(auto_error=False)
+
+@app.middleware("http")
+async def require_login(request: Request, call_next):
+    username = os.environ.get("APP_USERNAME", "")
+    password = os.environ.get("APP_PASSWORD", "")
+
+    if not username or not password:
+        return JSONResponse(
+            status_code=503,
+            content={"detail": "App login is not configured."},
+        )
+
+    try:
+        credentials = await security(request)
+    except HTTPException:
+        credentials = None
+
+    username_ok = secrets.compare_digest(
+        (credentials.username if credentials else "").encode("utf-8"),
+        username.encode("utf-8"),
+    )
+    password_ok = secrets.compare_digest(
+        (credentials.password if credentials else "").encode("utf-8"),
+        password.encode("utf-8"),
+    )
+
+    if not (username_ok and password_ok):
+        return JSONResponse(
+            status_code=401,
+            content={"detail": "Authentication required."},
+            headers={"WWW-Authenticate": 'Basic realm="Fantasy Football"'},
+        )
+
+    response = await call_next(request)
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
 
 def fetch_league(view):
     cookies = {
@@ -125,3 +170,12 @@ def get_roster(team_id: int):
         "scoringPeriodId": data.get("scoringPeriodId"),
         "players": roster,
     }
+
+build_directory = Path(__file__).resolve().parent.parent / "build"
+
+if build_directory.is_dir():
+    app.mount(
+        "/",
+        StaticFiles(directory=str(build_directory), html=True),
+        name="frontend",
+    )
