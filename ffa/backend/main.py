@@ -62,3 +62,35 @@ def get_teams():
         }
         for team in data.get("teams", [])
     ]
+
+
+@app.get("/api/teams/{team_id}/roster")
+def get_roster(team_id: int):
+    data = fetch_league("mRoster")
+
+    selected_team = next(
+        (team for team in data.get("teams", []) if team["id"] == team_id),
+        None,
+    )
+
+    if selected_team is None:
+        raise HTTPException(status_code=404, detail="Team not found.")
+
+    roster = []
+
+    for entry in selected_team.get("roster", {}).get("entries", []):
+        player = entry["playerPoolEntry"]["player"]
+
+        roster.append({
+            "id": player["id"],
+            "name": player["fullName"],
+            "positionId": player.get("defaultPositionId"),
+            "proTeamId": player.get("proTeamId"),
+        })
+
+    return {
+        "teamId": team_id,
+        "seasonId": data.get("seasonId"),
+        "scoringPeriodId": data.get("scoringPeriodId"),
+        "players": roster,
+    }

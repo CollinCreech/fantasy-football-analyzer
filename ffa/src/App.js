@@ -10,6 +10,9 @@ function App() {
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [teamsLoading, setTeamsLoading] = useState(true);
   const [teamsError, setTeamsError] = useState("");
+  const [rosterPlayers, setRosterPlayers] = useState([]);
+  const [rosterLoading, setRosterLoading] = useState(false);
+  const [rosterError, setRosterError] = useState("");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -28,7 +31,9 @@ function App() {
         setTeams(data);
       } catch (error) {
         if (error.name !== "AbortError") {
-          setTeamsError("Unable to load league teams. Try refreshing the page.");
+          setTeamsError(
+            "Unable to load league teams. Try refreshing the page.",
+          );
         }
       } finally {
         if (!controller.signal.aborted) {
@@ -41,16 +46,55 @@ function App() {
     return () => controller.abort();
   }, []);
 
-  const filteredPlayers = players.filter((player) => {
-    const matchesSearch = player.name
-      .toLowerCase()
-      .includes(searchTerm.trim().toLowerCase());
+  useEffect(() => {
+    if (!selectedTeamId) {
+      setRosterPlayers([]);
+      setRosterLoading(false);
+      setRosterError("");
+      return;
+    }
 
-    const matchesPosition =
-      selectedPosition === "ALL" || player.position === selectedPosition;
+    const controller = new AbortController();
 
-    return matchesSearch && matchesPosition;
-  });
+    async function loadRoster() {
+      setRosterLoading(true);
+      setRosterError("");
+      setRosterPlayers([]);
+
+      try {
+        const response = await fetch(`/api/teams/${selectedTeamId}/roster`, {
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error("Unable to load roster.");
+        }
+
+        const data = await response.json();
+
+        if (!controller.signal.aborted) {
+          setRosterPlayers(data.players);
+        }
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          setRosterError(
+            "Unable to load roster. Please select your team again.",
+          );
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setRosterLoading(false);
+        }
+      }
+    }
+
+    loadRoster();
+    return () => controller.abort();
+  }, [selectedTeamId]);
+
+  const filteredPlayers = rosterPlayers.filter((player) =>
+    player.name.toLowerCase().includes(searchTerm.trim().toLowerCase()),
+  );
 
   return (
     <div className="App">
@@ -92,6 +136,7 @@ function App() {
         />
         <label htmlFor="position-filter">Position</label>
         <select
+          disabled
           id="position-filter"
           value={selectedPosition}
           onChange={(event) => setSelectedPosition(event.target.value)}
@@ -104,7 +149,18 @@ function App() {
         </select>
       </div>
 
-      {filteredPlayers.length === 0 && <p role="status">No players found.</p>}
+      {!selectedTeamId && (
+        <p role="status">Select a team to view its roster.</p>
+      )}
+
+      {rosterLoading && <p role="status">Loading roster…</p>}
+
+      {rosterError && <p role="alert">{rosterError}</p>}
+
+      {selectedTeamId &&
+        !rosterLoading &&
+        !rosterError &&
+        filteredPlayers.length === 0 && <p role="status">No players found.</p>}
 
       <div className="player-list">
         {filteredPlayers.map((player) => (
