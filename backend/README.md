@@ -1,6 +1,6 @@
 # Backend setup
 
-Run these commands from the `ffa` directory.
+Run these commands from the repository root.
 
 ## Install dependencies
 
@@ -53,20 +53,16 @@ Try `GET /api/teams`. A successful response contains team IDs and names.
 
 ## Run tests
 
+From the repository root, with the virtual environment activated:
+
 ```bash
-python -m unittest discover -s backend -v
+cd backend
+python -m unittest discover -v
 ```
 
 ## Start the frontend
 
-In another terminal, from the `ffa` directory:
-
-```bash
-npm ci
-npm start
-```
-
-Open http://localhost:3000. API requests are proxied to the backend.
+See the [root README](../README.md) for frontend and Docker instructions.
 
 For a publicly hosted deployment, use HTTPS to protect app login
 credentials in transit.

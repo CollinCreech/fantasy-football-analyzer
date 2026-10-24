@@ -1,11 +1,11 @@
 FROM node:22-bookworm-slim AS frontend
 
 WORKDIR /app
-COPY package.json package-lock.json ./
+COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 
-COPY public ./public
-COPY src ./src
+COPY frontend/public ./public
+COPY frontend/src ./src
 RUN npm run build
 
 FROM python:3.12-slim
