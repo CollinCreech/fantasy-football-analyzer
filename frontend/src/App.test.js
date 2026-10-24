@@ -19,6 +19,9 @@ const rosters = {
 
 beforeEach(() => {
   global.fetch = jest.fn(async (url) => {
+    if (url === "/api/config") {
+      return { ok: true, json: async () => ({ demoMode: false }) };
+    }
     if (url === "/api/teams") {
       return { ok: true, json: async () => teams };
     }
@@ -65,7 +68,7 @@ test("shows a selection prompt without loading a roster initially", async () => 
     screen.getByText("Select a team to view its roster."),
   ).toBeInTheDocument();
   expect(screen.queryAllByRole("heading", { level: 2 })).toHaveLength(0);
-  expect(global.fetch).toHaveBeenCalledTimes(1);
+  expect(global.fetch).toHaveBeenCalledTimes(2);
 });
 
 test("loads the selected team's roster", async () => {
@@ -159,4 +162,39 @@ test("shows an error and removes the old roster when a request fails", async () 
   );
   expect(screen.queryAllByRole("heading", { level: 2 })).toHaveLength(0);
   expect(screen.queryByText("No players found.")).not.toBeInTheDocument();
+});
+
+test("labels demo data and keeps team selection working", async () => {
+  const privateFetch = global.fetch;
+
+  global.fetch = jest.fn((url, options) => {
+    if (url === "/api/config") {
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({ demoMode: true }),
+      });
+    }
+
+    return privateFetch(url, options);
+  });
+
+  render(<App />);
+  await selectTeam();
+
+  expect(
+    screen.getByText(/Demo mode — explore fictional teams/),
+  ).toBeInTheDocument();
+
+  expect(
+    screen.getByRole("heading", { name: "Josh Allen" }),
+  ).toBeInTheDocument();
+});
+
+test("does not show a demo banner in private mode", async () => {
+  render(<App />);
+  await screen.findByRole("combobox", { name: /my team/i });
+
+  expect(
+    screen.queryByText(/Demo mode — explore fictional teams/),
+  ).not.toBeInTheDocument();
 });

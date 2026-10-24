@@ -12,6 +12,7 @@ class AuthenticationTests(unittest.TestCase):
             {
                 "APP_USERNAME": "test-user",
                 "APP_PASSWORD": "test-password",
+                "DEMO_MODE": "false",
             },
         )
         self.environment.start()
@@ -22,7 +23,7 @@ class AuthenticationTests(unittest.TestCase):
 
     def test_routes_require_login(self):
         for path in ["/", "/docs", "/api/team", "/api/teams",
-                    "/api/teams/1/roster"]:
+                    "/api/teams/1/roster", "/api/config"]:
             with self.subTest(path=path):
                 response = self.client.get(path)
                 self.assertEqual(response.status_code, 401)

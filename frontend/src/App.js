@@ -12,22 +12,31 @@ function App() {
   const [rosterPlayers, setRosterPlayers] = useState([]);
   const [rosterLoading, setRosterLoading] = useState(false);
   const [rosterError, setRosterError] = useState("");
+  const [demoMode, setDemoMode] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
 
     async function loadTeams() {
       try {
-        const response = await fetch("/api/teams", {
-          signal: controller.signal,
-        });
+        const [configResponse, teamsResponse] = await Promise.all([
+          fetch("/api/config", { signal: controller.signal }),
+          fetch("/api/teams", { signal: controller.signal }),
+        ]);
 
-        if (!response.ok) {
+        if (!configResponse.ok || !teamsResponse.ok) {
           throw new Error("Unable to load league teams.");
         }
 
-        const data = await response.json();
-        setTeams(data);
+        const [config, data] = await Promise.all([
+          configResponse.json(),
+          teamsResponse.json(),
+        ]);
+
+        if (!controller.signal.aborted) {
+          setDemoMode(config.demoMode === true);
+          setTeams(data);
+        }
       } catch (error) {
         if (error.name !== "AbortError") {
           setTeamsError(
@@ -105,7 +114,14 @@ function App() {
   return (
     <div className="App">
       <h1>Fantasy Football Analyzer</h1>
-      <p>View your ESPN fantasy team's roster.</p>
+      {demoMode ? (
+        <p className="demo-banner">
+          Demo mode — explore fictional teams and sample scores. No ESPN account
+          is required.
+        </p>
+      ) : (
+        <p>View your ESPN fantasy team's roster.</p>
+      )}{" "}
       <div className="player-search">
         {teamsLoading && <p role="status">Loading league teams…</p>}
         {teamsError && <p role="alert">{teamsError}</p>}
@@ -134,7 +150,6 @@ function App() {
           </>
         )}
       </div>
-
       <div className="player-search">
         <label htmlFor="player-search">Search players</label>
         <input
@@ -159,20 +174,15 @@ function App() {
           <option value="D/ST">Defense / Special teams</option>
         </select>
       </div>
-
       {!selectedTeamId && (
         <p role="status">Select a team to view its roster.</p>
       )}
-
       {rosterLoading && <p role="status">Loading roster…</p>}
-
       {rosterError && <p role="alert">{rosterError}</p>}
-
       {selectedTeamId &&
         !rosterLoading &&
         !rosterError &&
         filteredPlayers.length === 0 && <p role="status">No players found.</p>}
-
       <div className="player-list">
         {filteredPlayers.map((player) => (
           <PlayerCard key={player.id} player={player} />
