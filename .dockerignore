@@ -1,9 +1,9 @@
 .git
 .agents
 .codex
-node_modules
-build
-coverage
+**/node_modules
+**/build
+**/coverage
 **/.env
 **/.env.*
 **/.venv
