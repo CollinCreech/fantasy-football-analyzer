@@ -1,35 +1,72 @@
-# Private ESPN league access
+# Backend setup
 
-Install dependencies from the `ffa` directory:
+Run these commands from the `ffa` directory.
+
+## Install dependencies
+
+```bash
+python3 -m venv backend/.venv
+source backend/.venv/bin/activate
+python -m pip install -r backend/requirements-dev.txt
+```
+
+On Windows PowerShell, activate the environment with:
 
 ```powershell
-.\backend\venv\Scripts\python.exe -m pip install -r backend/requirements.txt
+.\backend\.venv\Scripts\Activate.ps1
 ```
 
-Sign in to ESPN with an account that can view the league. In your browser's
-developer tools, open Application (Chrome/Edge) or Storage (Firefox), then
-Cookies. Find `SWID` and `espn_s2` for the ESPN site. Copy the complete values,
-including braces if present in SWID. These cookies grant account access;
-keep them out of Git, frontend code, screenshots, and chat.
+## Configure the app
 
-Create `backend/.env` alongside `main.py` and paste the full values:
+Copy `backend/.env.example` to `backend/.env`.
 
-```dotenv
-ESPN_SWID={your-full-SWID-value}
-ESPN_S2=your-full-espn_s2-value
+Set:
+
+- `APP_USERNAME` and `APP_PASSWORD`: credentials for signing into this app.
+- `ESPN_LEAGUE_ID`: the league ID from your ESPN fantasy league URL.
+- `ESPN_SEASON`: the season year.
+- `ESPN_SWID` and `ESPN_S2`: cookies from an ESPN account with league access.
+
+To find the cookies, sign in to ESPN, open your browser's developer
+tools, and inspect the ESPN site's cookies under Application or Storage.
+Copy the complete `SWID` and `espn_s2` values, including any braces.
+
+These cookies grant account access. Never commit them or include them
+in screenshots, frontend code, or logs.
+
+The backend loads `.env` at startup and overrides existing environment
+values. Restart it after changing configuration.
+
+## Start the backend
+
+```bash
+python -m uvicorn main:app --app-dir backend --reload
 ```
 
-This file is ignored by Git. The backend loads it at startup, overriding any
-older cookie values in your terminal environment. Restart the backend after
-editing it.
+Open http://localhost:8000/docs and sign in using your app credentials.
 
-Start the backend from the `ffa` directory:
+Try `GET /api/teams`. A successful response contains team IDs and names.
 
-```powershell
-.\backend\venv\Scripts\python.exe -m uvicorn main:app --app-dir backend --reload
+- `401`: app credentials are missing or incorrect.
+- `503`: required configuration is missing or invalid.
+- `502`: ESPN access failed; check your cookies and league access.
+
+## Run tests
+
+```bash
+python -m unittest discover -s backend -v
 ```
 
-Open http://localhost:8000/docs and execute GET `/api/teams`. Successful access
-returns team IDs and names. Missing cookies return 503; ESPN rejecting cookies
-returns 502 with a specific message. If rejected, sign in again, refresh the
-cookie values, and confirm that the account can view league `673677643` in 2026.
+## Start the frontend
+
+In another terminal, from the `ffa` directory:
+
+```bash
+npm ci
+npm start
+```
+
+Open http://localhost:3000. API requests are proxied to the backend.
+
+For a publicly hosted deployment, use HTTPS to protect app login
+credentials in transit.
