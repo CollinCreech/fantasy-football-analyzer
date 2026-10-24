@@ -66,10 +66,18 @@ def fetch_league(view):
             detail="Set ESPN_SWID and ESPN_S2 on the backend to access your private league.",
         )
 
-    league_id = "673677643"
+    league_id = os.environ.get("ESPN_LEAGUE_ID", "").strip()
+    season = os.environ.get("ESPN_SEASON", "").strip()
+
+    if not league_id.isdecimal() or not season.isdecimal():
+        raise HTTPException(
+            status_code=503,
+            detail="Set ESPN_LEAGUE_ID and ESPN_SEASON to numeric values.",
+        )
+
     url = (
         "https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/"
-        f"seasons/2026/segments/0/leagues/{league_id}?view={view}"
+        f"seasons/{season}/segments/0/leagues/{league_id}?view={view}"
     )
 
     try:
