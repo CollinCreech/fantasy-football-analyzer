@@ -53,6 +53,31 @@ npm start
 Open http://localhost:3000. The frontend proxies API requests to port 8000.
 API documentation is available at http://localhost:8000/docs. Sign in with your configured app credentials.
 
+## Demo mode
+
+To explore fictional teams and scores without ESPN credentials, set this
+in `backend/.env` and restart the backend:
+
+```dotenv
+DEMO_MODE=true
+```
+
+Start the backend and frontend using the local setup instructions.
+Demo mode allows access without app login and never contacts ESPN,
+even when ESPN credentials are configured.
+
+For a public Docker demo:
+
+```bash
+docker build -t fantasy-football-analyzer .
+docker run --rm -e DEMO_MODE=true -p 8000:10000 fantasy-football-analyzer
+```
+
+Open http://localhost:8000.
+
+To return to your private league, set `DEMO_MODE=false`, configure app
+login and ESPN credentials, and restart the backend.
+
 ## Tests and build
 
 Backend, from the repository root with the virtual environment activated:

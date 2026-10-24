@@ -15,6 +15,7 @@ class LeagueConfigurationTests(unittest.TestCase):
                 "ESPN_S2": "test-cookie",
                 "ESPN_LEAGUE_ID": "123456",
                 "ESPN_SEASON": "2026",
+                "DEMO_MODE": "false",
             },
             clear=True,
         )

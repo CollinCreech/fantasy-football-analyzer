@@ -11,6 +11,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 import requests
 
+from demo_data import get_demo_league
+
 
 load_dotenv(Path(__file__).with_name(".env"), override=True)
 
@@ -18,8 +20,15 @@ app = FastAPI()
 
 security = HTTPBasic(auto_error=False)
 
+def is_demo_mode():
+    return os.environ.get("DEMO_MODE", "false").strip().lower() == "true"
+
 @app.middleware("http")
 async def require_login(request: Request, call_next):
+    if is_demo_mode():
+        response = await call_next(request)
+        response.headers["Cache-Control"] = "no-store"
+        return response
     username = os.environ.get("APP_USERNAME", "")
     password = os.environ.get("APP_PASSWORD", "")
 
@@ -56,6 +65,8 @@ async def require_login(request: Request, call_next):
 
 
 def fetch_league(view):
+    if is_demo_mode():
+        return get_demo_league()
     cookies = {
         "SWID": os.environ.get("ESPN_SWID", "").strip(),
         "espn_s2": os.environ.get("ESPN_S2", "").strip(),
@@ -103,6 +114,10 @@ POSITION_LABELS = {
       5: "K",
       16: "D/ST",
   }
+
+@app.get("/api/config")
+def get_config():
+    return {"demoMode": is_demo_mode()}
 
 @app.get("/api/team")
 def get_team():
